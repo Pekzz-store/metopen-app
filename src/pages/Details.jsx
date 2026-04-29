@@ -1,0 +1,182 @@
+import React, { useState } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { ArrowLeft, Clock, MapPin, DollarSign, Star, Car, Check } from 'lucide-react';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../lib/AuthContext';
+
+const Details = () => {
+  const { state } = useLocation();
+  const navigate = useNavigate();
+  const { id } = useParams();
+  const { user } = useAuth();
+  
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState(state?.location || null);
+
+  // Fallback if data is missing
+  const location = currentLocation || {
+    id: id,
+    name: "Memuat Data...",
+    type: "Umum",
+    status: 'full',
+    availableSlots: 0,
+    totalSlots: 0,
+    rate: "-",
+  };
+
+  const handleBooking = async () => {
+    if (location.availableSlots <= 0) return;
+    
+    setLoading(true);
+    try {
+      // 1. Tambahkan data ke tabel reservations
+      const { error: insertError } = await supabase
+        .from('reservations')
+        .insert([
+          { 
+            parking_id: location.id, 
+            user_name: user?.email || 'User Anonim',
+            license_plate: 'SBY 1234 A' 
+          }
+        ]);
+
+      if (insertError) throw insertError;
+
+      // 2. Kurangi available_slots di tabel parking_locations
+      const newAvailableSlots = location.availableSlots - 1;
+      let newStatus = location.status;
+      
+      if (newAvailableSlots === 0) newStatus = 'full';
+      else if (newAvailableSlots <= 5) newStatus = 'almost-full';
+
+      const { error: updateError } = await supabase
+        .from('parking_locations')
+        .update({ 
+          available_slots: newAvailableSlots,
+          status: newStatus
+        })
+        .eq('id', location.id);
+
+      if (updateError) throw updateError;
+
+      // Update local state to show success
+      setCurrentLocation({
+        ...location,
+        availableSlots: newAvailableSlots,
+        status: newStatus
+      });
+      setSuccess(true);
+      
+      // Reset success message after 3 seconds
+      setTimeout(() => setSuccess(false), 3000);
+
+    } catch (error) {
+      console.error('Error booking:', error);
+      alert('Gagal melakukan reservasi. Silakan coba lagi.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getStatusBadge = (status) => {
+    switch(status) {
+      case 'available': return <span className="badge available">Tersedia</span>;
+      case 'full': return <span className="badge full">Penuh</span>;
+      case 'almost-full': return <span className="badge almost-full">Hampir Penuh</span>;
+      default: return null;
+    }
+  };
+
+  return (
+    <div style={{ padding: '20px', paddingBottom: '100px' }}>
+      <button 
+        onClick={() => navigate(-1)} 
+        style={{ background: 'none', border: 'none', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginBottom: '20px', color: 'var(--text-main)' }}
+      >
+        <ArrowLeft size={20} />
+        <span style={{ fontWeight: 500 }}>Kembali</span>
+      </button>
+
+      {success && (
+        <div style={{ background: '#D1FAE5', color: '#065F46', padding: '12px', borderRadius: '8px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Check size={20} />
+          <strong>Booking Berhasil!</strong> Tempat Anda telah diamankan.
+        </div>
+      )}
+
+      <div className="card" style={{ margin: '0 0 20px 0' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+          <div>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '4px' }}>{location.name}</h2>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Parkir {location.type}</p>
+          </div>
+          {getStatusBadge(location.status)}
+        </div>
+
+        <div style={{ display: 'flex', gap: '12px', marginBottom: '20px' }}>
+          <div style={{ flex: 1, background: 'var(--bg-color)', padding: '12px', borderRadius: '8px', textAlign: 'center' }}>
+            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--primary)' }}>
+              {location.availableSlots}
+            </div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Sisa Slot</div>
+          </div>
+          <div style={{ flex: 1, background: 'var(--bg-color)', padding: '12px', borderRadius: '8px', textAlign: 'center' }}>
+            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--text-main)' }}>
+              {location.totalSlots}
+            </div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Kapasitas Total</div>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <MapPin size={20} color="var(--text-muted)" />
+            <span>Surabaya, Jawa Timur</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <DollarSign size={20} color="var(--text-muted)" />
+            <span>{location.rate}</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <Clock size={20} color="var(--text-muted)" />
+            <span>08:00 - 22:00 WIB</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <Star size={20} color="#F59E0B" />
+            <span>4.8 / 5.0 (120 Ulasan)</span>
+          </div>
+        </div>
+
+        {/* Predictive AI Section (Simulated) */}
+        <div style={{ padding: '16px', background: '#F8FAFC', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+            <div style={{ background: 'var(--primary)', color: 'white', padding: '4px', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 'bold' }}>AI PREDIKSI</div>
+            <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>Estimasi Ketersediaan</span>
+          </div>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0, lineHeight: 1.5 }}>
+            {location.availableSlots > 20 
+              ? 'Berdasarkan data historis spatio-temporal, lokasi ini diprediksi tetap tersedia hingga 2 jam ke depan.' 
+              : 'Tren menunjukkan lokasi ini akan penuh dalam waktu kurang dari 30 menit. Segera lakukan reservasi.'}
+          </p>
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: '12px' }}>
+        <button className="btn btn-outline" style={{ flex: 1 }} onClick={() => navigate('/navigation')}>
+          <MapPin size={18} /> Rute
+        </button>
+        <button 
+          className="btn btn-primary" 
+          style={{ flex: 2, opacity: location.availableSlots === 0 || loading ? 0.7 : 1 }}
+          disabled={location.availableSlots === 0 || loading}
+          onClick={handleBooking}
+        >
+          <Car size={18} /> {loading ? 'Memproses...' : 'Booking Sekarang'}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default Details;
