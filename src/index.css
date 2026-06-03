@@ -287,7 +287,154 @@ body {
   min-height: 100vh;
 }
 
+/* Utility classes for responsive text */
+.mobile-text { display: none; }
+
 /* Hide leaflet-routing-machine instructions panel */
 .leaflet-routing-container {
   display: none !important;
 }
+
+/* =========================================
+   Responsive Adjustments (Mobile)
+========================================= */
+@media (max-width: 768px) {
+  /* Layout Adjustments */
+  .app-layout {
+    flex-direction: column;
+  }
+
+  .main-content {
+    margin-left: 0;
+    margin-bottom: 65px; /* Space for bottom nav */
+  }
+
+  /* Sidebar to Bottom Nav */
+  .sidebar {
+    width: 100%;
+    height: 65px;
+    flex-direction: row;
+    top: auto;
+    bottom: 0;
+    border-right: none;
+    border-top: 1px solid #E5E7EB;
+    box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.05);
+    z-index: 2000;
+  }
+
+  .sidebar-header, .sidebar-footer {
+    display: none; /* Hide logo and user info on bottom nav */
+  }
+
+  .sidebar-nav {
+    flex-direction: row;
+    padding: 0;
+    justify-content: space-around;
+    align-items: center;
+    width: 100%;
+  }
+
+  .nav-item {
+    flex-direction: column;
+    padding: 8px 4px;
+    gap: 4px;
+    flex: 1;
+    justify-content: center;
+    border-radius: 0;
+  }
+
+  .nav-item:hover {
+    background: transparent;
+  }
+
+  .nav-item.active {
+    background: transparent;
+    color: var(--primary);
+  }
+
+  .nav-item span {
+    font-size: 0.65rem;
+    text-align: center;
+    line-height: 1.1;
+  }
+
+  /* Topbar Adjustments */
+  .topbar {
+    padding: 0 16px;
+    height: 60px;
+  }
+
+  /* Page Content Adjustments */
+  .page-container {
+    padding: 16px;
+  }
+
+  /* Map Container Adjustments */
+  .map-page-container {
+    flex-direction: column;
+    height: calc(100vh - 60px - 65px); /* vh - topbar - bottom_nav */
+  }
+
+  .map-container {
+    order: 1;
+    flex: 1;
+  }
+
+  .map-sidebar {
+    order: 2;
+    width: 100%;
+    height: auto;
+    max-height: 40vh;
+    border-left: none;
+    border-top: 1px solid #E5E7EB;
+    box-shadow: 0 -4px 15px rgba(0,0,0,0.05);
+  }
+
+  .admin-sidebar {
+    position: relative;
+    width: 100%;
+    height: auto;
+    flex-direction: row;
+    padding: 12px 0;
+  }
+
+  .admin-content {
+    margin-left: 0;
+    padding: 16px;
+  }
+
+  .desktop-text { display: none; }
+  .mobile-text { display: inline; }
+
+  /* Navigation Page specific */
+  .nav-search-container {
+    flex-direction: column;
+  }
+  .nav-search-container > form {
+    width: 100%;
+  }
+  .nav-card-content {
+    flex-direction: column;
+  }
+  .nav-card-actions {
+    width: 100% !important;
+    margin-top: 12px;
+  }
+  .nav-card-details {
+    flex-wrap: wrap;
+    gap: 12px !important;
+  }
+
+  /* Vehicles Page specific */
+  .table-responsive {
+    overflow-x: auto;
+  }
+  .vehicle-form-row {
+    flex-direction: column;
+    align-items: stretch !important;
+  }
+  .vehicle-form-row > * {
+    width: 100% !important;
+  }
+}
+

@@ -107,7 +107,7 @@ const Navigation = () => {
 
   return (
     <div style={{ padding: '20px' }}>
-      <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
+      <div className="nav-search-container" style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
         <form onSubmit={handleSearch} style={{ display: 'flex', gap: 8, flex: 1 }}>
           <input
             aria-label="Cari tujuan atau nama lokasi"
@@ -127,19 +127,19 @@ const Navigation = () => {
       ) : (searchResults && searchResults.length > 0) ? (
         searchResults.map((loc) => (
           <div key={loc.id} className="card" style={{ margin: '0 0 16px 0', border: '1px solid var(--border-color)', borderRadius: 12, padding: 18 }}>
-            <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
-              <div style={{ flex: 1 }}>
+            <div className="nav-card-content" style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+              <div style={{ flex: 1, width: '100%' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div style={{ fontWeight: 700, fontSize: '1rem' }}>{loc.name}</div>
                   <div style={{ marginLeft: 'auto', fontSize: '0.85rem', color: 'var(--muted)' }}>{loc.distance_km} km</div>
                 </div>
                 <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: 8 }}>Tipe: {loc.type === 'gedung' ? 'Gedung / Mall' : 'Tepi Jalan'} • Tarif: Rp {loc.rate?.toLocaleString()}/jam</div>
-                <div style={{ display: 'flex', gap: 24, alignItems: 'center', marginTop: 12, fontSize: '0.88rem' }}>
+                <div className="nav-card-details" style={{ display: 'flex', gap: 24, alignItems: 'center', marginTop: 12, fontSize: '0.88rem' }}>
                   <div><strong style={{ color: 'var(--primary)' }}>Ketersediaan:</strong> {loc.available_slots} / {loc.total_slots} Slot</div>
                   <div><strong style={{ color: 'var(--muted)' }}>Status:</strong> {loc.status}</div>
                 </div>
               </div>
-              <div style={{ width: 220, display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'stretch' }}>
+              <div className="nav-card-actions" style={{ width: 220, display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'stretch' }}>
                 <button className="btn btn-primary" style={{ padding: '10px 16px', borderRadius: 10 }} onClick={() => navigate(`/details/${loc.id}`, { state: { location: loc } })}>Lihat Detail & Rute</button>
               </div>
             </div>
@@ -167,8 +167,8 @@ const Navigation = () => {
                 borderLeft: selectedId === loc.id ? '6px solid var(--primary)' : undefined
               }}
             >
-              <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
-                <div style={{ flex: 1 }}>
+              <div className="nav-card-content" style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+                <div style={{ flex: 1, width: '100%' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
                     <div style={{ fontWeight: 700, fontSize: '1rem' }}>{loc.name} {index === 0 ? '(Prioritas Utama)' : '(Alternatif)'}</div>
                     <div style={{ marginLeft: 'auto' }}>
@@ -180,14 +180,14 @@ const Navigation = () => {
                     Tipe: {loc.type === 'gedung' ? 'Gedung / Mall' : 'Tepi Jalan'} • Tarif: Rp {loc.rate?.toLocaleString()}/jam
                   </div>
 
-                  <div style={{ display: 'flex', gap: 24, alignItems: 'center', marginTop: 12, fontSize: '0.88rem' }}>
+                  <div className="nav-card-details" style={{ display: 'flex', gap: 24, alignItems: 'center', marginTop: 12, fontSize: '0.88rem' }}>
                     <div><strong style={{ color: 'var(--primary)' }}>Ketersediaan:</strong> {loc.available_slots} / {loc.total_slots} Slot</div>
                     <div><strong style={{ color: 'var(--muted)' }}>Status:</strong> Tersedia</div>
                     <div><strong style={{ color: 'var(--muted)' }}>Lalu Lintas:</strong> Lancar</div>
                   </div>
                 </div>
 
-                <div style={{ width: 220, display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'stretch' }}>
+                <div className="nav-card-actions" style={{ width: 220, display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'stretch' }}>
                   <button 
                     className={index === 0 ? "btn btn-primary" : "btn btn-outline"} 
                     style={{ padding: '10px 16px', borderRadius: 10 }}

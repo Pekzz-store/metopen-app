@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../lib/AuthContext';
-import { PlusSquare, Edit2, Trash2, Search } from 'lucide-react';
+import { PlusSquare, Edit2, Trash2 } from 'lucide-react';
 
 const emptyVehicle = () => ({ id: null, license_plate: '', vehicle_type: 'Mobil' });
 
@@ -123,34 +123,16 @@ const MyVehicles = () => {
                 </div>
               </div>
             )}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'white', padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(0,0,0,0.06)' }}>
-                  <Search size={16} />
-                  <input placeholder="Cari plat nomor atau jenis..." style={{ border: 'none', outline: 'none' }} />
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <select style={{ padding: 8, borderRadius: 8, border: '1px solid rgba(0,0,0,0.06)' }}>
-                  <option>Semua</option>
-                  <option>Mobil</option>
-                  <option>Motor</option>
-                </select>
-                <select style={{ padding: 8, borderRadius: 8, border: '1px solid rgba(0,0,0,0.06)' }}>
-                  <option>Semua</option>
-                </select>
-              </div>
-            </div>
 
-            <div style={{ background: 'white', borderRadius: 8, padding: 16, boxShadow: '0 0 0 1px rgba(0,0,0,0.02)' }}>
+            <div className="table-responsive" style={{ background: 'white', borderRadius: 8, padding: 16, boxShadow: '0 0 0 1px rgba(0,0,0,0.02)' }}>
               <div style={{ marginBottom: 12, fontWeight: 600 }}>Daftar Kendaraan</div>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ textAlign: 'left', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-                    <th style={{ padding: '12px 8px' }}>Plat Nomor</th>
-                    <th style={{ padding: '12px 8px' }}>Jenis</th>
-                    <th style={{ padding: '12px 8px' }}>Status</th>
-                    <th style={{ padding: '12px 8px' }}>Aksi</th>
+                    <th style={{ padding: '12px 8px', whiteSpace: 'nowrap' }}>Plat Nomor</th>
+                    <th style={{ padding: '12px 8px', whiteSpace: 'nowrap' }}>Jenis</th>
+                    <th style={{ padding: '12px 8px', whiteSpace: 'nowrap' }}>Status</th>
+                    <th style={{ padding: '12px 8px', whiteSpace: 'nowrap' }}>Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -161,12 +143,12 @@ const MyVehicles = () => {
                   )}
                   {vehicles.map((v, idx) => (
                     <tr key={v.id} style={{ borderTop: '1px solid rgba(0,0,0,0.04)', background: idx % 2 === 0 ? 'transparent' : '#fbfbfb' }}>
-                      <td style={{ padding: 12 }}>{v.license_plate}</td>
-                      <td style={{ padding: 12 }}>{v.vehicle_type}</td>
-                      <td style={{ padding: 12 }}>
+                      <td style={{ padding: '12px 8px', whiteSpace: 'nowrap' }}>{v.license_plate}</td>
+                      <td style={{ padding: '12px 8px', whiteSpace: 'nowrap' }}>{v.vehicle_type}</td>
+                      <td style={{ padding: '12px 8px', whiteSpace: 'nowrap' }}>
                         <span style={{ background: '#ecfdf5', color: '#065f46', padding: '6px 8px', borderRadius: 999, fontSize: '0.85rem', fontWeight: 600 }}>Aktif</span>
                       </td>
-                      <td style={{ padding: 12 }}>
+                      <td style={{ padding: '12px 8px', whiteSpace: 'nowrap' }}>
                         <div style={{ display: 'flex', gap: 8 }}>
                           <button onClick={() => startEdit(v)} title="Ubah" style={{ background: '#fff', border: '1px solid rgba(0,0,0,0.06)', padding: 8, borderRadius: 8, cursor: 'pointer' }}><Edit2 size={16} /></button>
                           <button onClick={() => remove(v.id)} title="Hapus" style={{ background: '#fff', border: '1px solid rgba(0,0,0,0.06)', padding: 8, borderRadius: 8, cursor: 'pointer', color: '#ef4444' }}><Trash2 size={16} /></button>
@@ -182,7 +164,7 @@ const MyVehicles = () => {
               <div style={{ marginTop: 20 }}>
                 <div className="card" style={{ padding: 16 }}>
                   <h4 style={{ marginTop: 0 }}>{editingId ? 'Ubah Kendaraan' : 'Tambah Kendaraan'}</h4>
-                  <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 8 }}>
+                  <div className="vehicle-form-row" style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 8 }}>
                     <input value={form.license_plate} onChange={e => setForm(prev => ({ ...prev, license_plate: e.target.value }))} placeholder="No. Polisi" style={{ padding: 8, minWidth: 200 }} />
                     <select value={form.vehicle_type} onChange={e => setForm(prev => ({ ...prev, vehicle_type: e.target.value }))} style={{ padding: 8 }}>
                       <option>Mobil</option>

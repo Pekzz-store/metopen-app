@@ -12,6 +12,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import UserLayout from './components/UserLayout';
 import Reports from './pages/Reports';
+import AboutUs from './pages/AboutUs';
 
 const ProtectedRoute = ({ children, requireAdmin }) => {
   const { user, isAdmin } = useAuth();
@@ -56,6 +57,7 @@ function App() {
             <Route path="/details/:id" element={<Details />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/profile/about" element={<AboutUs />} />
             <Route path="/profile/vehicles" element={<MyVehicles />} />
             <Route path="/reports" element={<Reports />} />
           </Route>

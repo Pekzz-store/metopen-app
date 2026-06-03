@@ -1,8 +1,10 @@
-import { User, Settings, HelpCircle, LogOut, ChevronRight } from 'lucide-react';
+import { LogOut, ChevronRight, Info } from 'lucide-react';
 import { useAuth } from '../lib/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const Profile = () => {
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   // profile page no longer shows license plate here; vehicles are managed separately
   
   return (
@@ -17,19 +19,9 @@ const Profile = () => {
       </div>
 
       <div style={{ marginBottom: '24px' }}>
-        <h3 style={{ fontSize: '1rem', color: 'var(--text-muted)', marginBottom: '12px', paddingLeft: '8px' }}>AKUN SAYA</h3>
+        <h3 style={{ fontSize: '1rem', color: 'var(--text-muted)', marginBottom: '12px', paddingLeft: '8px' }}>INFORMASI</h3>
         <div className="card" style={{ margin: '0', padding: '8px 16px' }}>
-          <ProfileMenuItem icon={<User size={20} />} label="Data Pribadi" />
-        </div>
-      </div>
-
-      {/* Vehicle management moved to /profile/vehicles */}
-
-      <div style={{ marginBottom: '24px' }}>
-        <h3 style={{ fontSize: '1rem', color: 'var(--text-muted)', marginBottom: '12px', paddingLeft: '8px' }}>PENGATURAN</h3>
-        <div className="card" style={{ margin: '0', padding: '8px 16px' }}>
-          <ProfileMenuItem icon={<Settings size={20} />} label="Preferensi Aplikasi" />
-          <ProfileMenuItem icon={<HelpCircle size={20} />} label="Pusat Bantuan" />
+          <ProfileMenuItem icon={<Info size={20} />} label="Tentang Aplikasi (About Us)" onClick={() => navigate('/profile/about')} />
         </div>
       </div>
 
@@ -44,8 +36,8 @@ const Profile = () => {
   );
 };
 
-const ProfileMenuItem = ({ icon, label }) => (
-  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 0', borderBottom: '1px solid rgba(0,0,0,0.05)', cursor: 'pointer' }}>
+const ProfileMenuItem = ({ icon, label, onClick }) => (
+  <div onClick={onClick} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 0', borderBottom: '1px solid rgba(0,0,0,0.05)', cursor: 'pointer' }}>
     <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
       <div style={{ color: 'var(--text-muted)' }}>{icon}</div>
       <div style={{ fontWeight: 500 }}>{label}</div>

@@ -15,11 +15,17 @@ const Sidebar = () => {
       <nav className="sidebar-nav">
         <NavLink to="/" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
           <MapIcon size={20} />
-          <span>Peta Parkir GIS</span>
+          <span>
+            <span className="desktop-text">Peta Parkir GIS</span>
+            <span className="mobile-text">Peta</span>
+          </span>
         </NavLink>
         <NavLink to="/navigation" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
           <Navigation size={20} />
-          <span>Rekomendasi Parkir Tempat Surabaya</span>
+          <span>
+            <span className="desktop-text">Rekomendasi Parkir Tempat Surabaya</span>
+            <span className="mobile-text">Rekomendasi</span>
+          </span>
         </NavLink>
 
         <NavLink to="/profile" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
