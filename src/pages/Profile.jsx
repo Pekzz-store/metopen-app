@@ -1,4 +1,4 @@
-import { LogOut, ChevronRight, Info } from 'lucide-react';
+import { LogOut, ChevronRight, Info, Ticket } from 'lucide-react';
 import { useAuth } from '../lib/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -15,6 +15,13 @@ const Profile = () => {
         </div>
         <div>
           <h2 style={{ marginBottom: '4px' }}>{user?.email || 'Pengguna'}</h2>
+        </div>
+      </div>
+
+      <div style={{ marginBottom: '24px' }}>
+        <h3 style={{ fontSize: '1rem', color: 'var(--text-muted)', marginBottom: '12px', paddingLeft: '8px' }}>TRANSAKSI</h3>
+        <div className="card" style={{ margin: '0', padding: '8px 16px' }}>
+          <ProfileMenuItem icon={<Ticket size={20} />} label="Tiket Saya" onClick={() => navigate('/profile/tickets')} />
         </div>
       </div>
 

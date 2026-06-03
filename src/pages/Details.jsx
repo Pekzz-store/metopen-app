@@ -12,6 +12,8 @@ const Details = () => {
   
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [showPayment, setShowPayment] = useState(false);
+  const [paymentProcessing, setPaymentProcessing] = useState(false);
   const [currentLocation, setCurrentLocation] = useState(state?.location || null);
   const [userVehicles, setUserVehicles] = useState([]);
   const [selectedVehicle, setSelectedVehicle] = useState('');
@@ -48,13 +50,19 @@ const Details = () => {
     rate: "-",
   };
 
-  const handleBooking = async () => {
+  const handleBookingClick = () => {
     if (location.availableSlots <= 0) return;
-    
-    setLoading(true);
+    setShowPayment(true);
+  };
+
+  const processPayment = async () => {
+    setPaymentProcessing(true);
     try {
+      // Simulate payment delay
+      await new Promise(r => setTimeout(r, 2000));
+
       // 1. Tambahkan data ke tabel reservations
-      const { error: insertError } = await supabase
+      const { data: resData, error: insertError } = await supabase
         .from('reservations')
         .insert([
           { 
@@ -62,7 +70,8 @@ const Details = () => {
             user_name: user?.email || 'User Anonim',
             license_plate: selectedVehicle 
           }
-        ]);
+        ])
+        .select();
 
       if (insertError) throw insertError;
 
@@ -83,22 +92,16 @@ const Details = () => {
 
       if (updateError) throw updateError;
 
-      // Update local state to show success
-      setCurrentLocation({
-        ...location,
-        availableSlots: newAvailableSlots,
-        status: newStatus
-      });
-      setSuccess(true);
-      
-      // Reset success message after 3 seconds
-      setTimeout(() => setSuccess(false), 3000);
+      // Navigate to ticket
+      const ticketId = resData[0].id;
+      setShowPayment(false);
+      navigate(`/ticket/${ticketId}`);
 
     } catch (error) {
-      console.error('Error booking:', error);
-      alert('Gagal melakukan reservasi. Silakan coba lagi.');
+      console.error('Error processing payment/booking:', error);
+      alert('Gagal melakukan pembayaran. Silakan coba lagi.');
     } finally {
-      setLoading(false);
+      setPaymentProcessing(false);
     }
   };
 
@@ -211,13 +214,57 @@ const Details = () => {
         </button>
         <button 
           className="btn btn-primary" 
-          style={{ flex: 2, opacity: location.availableSlots === 0 || loading || userVehicles.length === 0 ? 0.7 : 1 }}
-          disabled={location.availableSlots === 0 || loading || userVehicles.length === 0}
-          onClick={handleBooking}
+          style={{ flex: 2, opacity: location.availableSlots === 0 || userVehicles.length === 0 ? 0.7 : 1 }}
+          disabled={location.availableSlots === 0 || userVehicles.length === 0}
+          onClick={handleBookingClick}
         >
-          <Car size={18} /> {loading ? 'Memproses...' : 'Booking Sekarang'}
+          <Car size={18} /> Booking Sekarang
         </button>
       </div>
+
+      {/* Payment Modal */}
+      {showPayment && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div style={{ background: 'white', borderRadius: '16px', width: '100%', maxWidth: '400px', overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)' }}>
+            <div style={{ padding: '20px', borderBottom: '1px solid #E5E7EB', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Ringkasan Pembayaran</h3>
+              <button onClick={() => !paymentProcessing && setShowPayment(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', lineHeight: 1 }}>&times;</button>
+            </div>
+            
+            <div style={{ padding: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <span style={{ color: 'var(--text-muted)' }}>Lokasi</span>
+                <span style={{ fontWeight: 500 }}>{location.name}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <span style={{ color: 'var(--text-muted)' }}>Kendaraan</span>
+                <span style={{ fontWeight: 500 }}>{selectedVehicle}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <span style={{ color: 'var(--text-muted)' }}>Durasi Booking</span>
+                <span style={{ fontWeight: 500 }}>1 Jam (Awal)</span>
+              </div>
+              
+              <div style={{ height: '1px', background: '#E5E7EB', margin: '16px 0' }}></div>
+              
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontWeight: 600 }}>Total Tagihan</span>
+                <span style={{ fontWeight: 700, fontSize: '1.2rem', color: 'var(--primary)' }}>Rp {location.rate ? location.rate.toLocaleString() : '3.000'}</span>
+              </div>
+            </div>
+
+            <div style={{ padding: '20px', background: '#F9FAFB', borderTop: '1px solid #E5E7EB' }}>
+              <button 
+                onClick={processPayment} 
+                disabled={paymentProcessing}
+                style={{ width: '100%', padding: '14px', borderRadius: '8px', background: 'var(--primary)', color: 'white', border: 'none', fontWeight: 600, fontSize: '1rem', cursor: paymentProcessing ? 'not-allowed' : 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
+              >
+                {paymentProcessing ? 'Memproses...' : 'Bayar Sekarang'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
