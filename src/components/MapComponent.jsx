@@ -1,7 +1,9 @@
-import React from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Tooltip, Circle, Polygon, Polyline, useMap } from 'react-leaflet';
+import { useState, useEffect, useRef } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, Tooltip, Circle, Polygon } from 'react-leaflet';
+import { MapController, FloatingLocate } from './MapHelpers';
 import { useNavigate } from 'react-router-dom';
 import L from 'leaflet';
+import RoutingMachine from './RoutingMachine';
 
 // Fix for default marker icons in react-leaflet
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -28,9 +30,53 @@ const iconAvailable = createIcon('#10B981'); // Green
 const iconFull = createIcon('#EF4444');      // Red
 const iconAlmostFull = createIcon('#F59E0B'); // Orange
 
-const MapComponent = ({ locations }) => {
+const MapComponent = ({ locations, isAdmin = false, panTo = null, routeTarget = null }) => {
   const navigate = useNavigate();
-  const center = [-7.2655, 112.743];
+
+  // User location state (for non-admin views)
+  const [userLocation, setUserLocation] = useState(null); // { lat, lng, accuracy }
+  const center = userLocation
+  ? [userLocation.lat, userLocation.lng]
+  : [-7.2655, 112.743];
+  const [watching, setWatching] = useState(false);
+  const watchIdRef = useRef(null);
+
+  // inject pulse keyframes for user marker
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    if (document.getElementById('map-user-pulse-style')) return;
+    const style = document.createElement('style');
+    style.id = 'map-user-pulse-style';
+    style.innerHTML = `@keyframes pulse { 0% { transform: scale(0.6); opacity: 0.6 } 70% { transform: scale(1.6); opacity: 0 } 100% { transform: scale(1.6); opacity: 0 } }`;
+    document.head.appendChild(style);
+  }, []);
+
+  // cleanup watch on unmount
+  useEffect(() => {
+    return () => {
+      if (watchIdRef.current != null && navigator.geolocation) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+        watchIdRef.current = null;
+      }
+    };
+  }, []);
+
+  // Effect to automatically get user location if routing is requested
+  useEffect(() => {
+    if (routeTarget && !userLocation && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy });
+        },
+        err => console.error("Geolocation error for routing", err),
+        { enableHighAccuracy: true }
+      );
+    }
+  }, [routeTarget, userLocation]);
+
+  // Controller component to access map instance and pan when requested
+
+  // FloatingLocate moved to MapHelpers to avoid creating components during render
 
   // Mock GIS Data for Smart Parking context
   const trafficJamHotspots = [
@@ -48,11 +94,7 @@ const MapComponent = ({ locations }) => {
     { id: 3, name: 'Zona Khusus Pejalan Kaki - Kenjeran', positions: [[-7.245, 112.755], [-7.245, 112.765], [-7.250, 112.765], [-7.250, 112.755]], color: '#3B82F6' }
   ];
 
-  const congestedRoutes = [
-    { id: 1, name: 'Rute Padat Merayap - Darmo', positions: [[-7.25, 112.738], [-7.26, 112.738], [-7.265, 112.742], [-7.27, 112.74]], color: '#EF4444' },
-    { id: 2, name: 'Rute Padat Merayap - Pemuda', positions: [[-7.265, 112.742], [-7.265, 112.750], [-7.263, 112.755]], color: '#F59E0B' },
-    { id: 3, name: 'Rute Padat Merayap - Ahmad Yani', positions: [[-7.300, 112.735], [-7.310, 112.730], [-7.320, 112.725]], color: '#EF4444' }
-  ];
+  // congestedRoutes intentionally omitted to avoid unused variable (visual-only mock data)
 
   const getIcon = (status) => {
     switch(status) {
@@ -64,12 +106,16 @@ const MapComponent = ({ locations }) => {
   };
 
   return (
-    <MapContainer 
-      center={center} 
-      zoom={14} 
-      style={{ height: '100%', width: '100%' }}
-      zoomControl={false}
-    >
+          <MapContainer
+        center={center}
+        zoom={16}
+        style={{
+          height: "100%",
+          width: "100%",
+          position: "relative"
+        }}
+        zoomControl={false}
+      >
       <TileLayer
         url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
@@ -114,8 +160,12 @@ const MapComponent = ({ locations }) => {
           icon={getIcon(loc.status)}
           eventHandlers={{
             click: () => {
-              // Navigate to details page when marker is clicked
-              navigate(`/details/${loc.id}`, { state: { location: loc } });
+              // If admin view, open admin management for this location; otherwise go to user details
+              if (isAdmin) {
+                navigate('/admin', { state: { openEditId: loc.id } });
+              } else {
+                navigate(`/details/${loc.id}`, { state: { location: loc } });
+              }
             },
           }}
         >
@@ -129,14 +179,51 @@ const MapComponent = ({ locations }) => {
               <button 
                 className="btn btn-primary" 
                 style={{ padding: '4px 8px', fontSize: '12px', width: '100%' }}
-                onClick={() => navigate(`/details/${loc.id}`, { state: { location: loc } })}
+                onClick={() => isAdmin ? navigate('/admin', { state: { openEditId: loc.id } }) : navigate(`/details/${loc.id}`, { state: { location: loc } })}
               >
-                Lihat Detail
+                {isAdmin ? 'Kelola Lokasi' : 'Lihat Detail'}
               </button>
             </div>
           </Popup>
         </Marker>
       ))}
+
+      {/* User current location marker (non-admin) */}
+      {userLocation && (
+        <>
+          <Circle
+            center={[userLocation.lat, userLocation.lng]}
+            pathOptions={{ color: '#2563EB', fillColor: '#BFDBFE', fillOpacity: 0.25, weight: 1 }}
+            radius={userLocation.accuracy || 30}
+          />
+          <Marker
+            position={[userLocation.lat, userLocation.lng]}
+            icon={L.divIcon({
+              className: 'user-location-icon',
+              html: (watching
+                ? `<div style="position:relative;width:36px;height:36px;display:flex;align-items:center;justify-content:center;">
+                     <span style="position:absolute;width:36px;height:36px;border-radius:50%;background:rgba(37,99,235,0.15);animation:pulse 1.8s infinite;"></span>
+                     <span style="width:18px;height:18px;background:#2563EB;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.25);position:relative;z-index:2;"></span>
+                   </div>`
+                : `<div style="background:#2563EB;width:18px;height:18px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.25);"></div>`),
+              iconSize: watching ? [36, 36] : [24, 24],
+              iconAnchor: watching ? [18, 18] : [12, 12]
+            })}
+          >
+            <Tooltip direction="top" offset={[0, -8]}>
+              <span style={{ fontWeight: 600 }}>Anda di sini</span>
+            </Tooltip>
+          </Marker>
+        </>
+      )}
+
+      {/* Pan to requested coordinates when `panTo` prop changes */}
+      {panTo && <MapController target={panTo} onMark={(t) => setUserLocation({ lat: t.lat, lng: t.lng, accuracy: null })} />}
+      <FloatingLocate watching={watching} setWatching={setWatching} setUserLocation={setUserLocation} watchIdRef={watchIdRef} />
+      
+      {userLocation && routeTarget && (
+        <RoutingMachine start={userLocation} end={routeTarget} />
+      )}
     </MapContainer>
   );
 };

@@ -1,9 +1,9 @@
-import React from 'react';
-import { User, Car, Settings, HelpCircle, LogOut, ChevronRight } from 'lucide-react';
+import { User, Settings, HelpCircle, LogOut, ChevronRight } from 'lucide-react';
 import { useAuth } from '../lib/AuthContext';
 
 const Profile = () => {
   const { user, signOut } = useAuth();
+  // profile page no longer shows license plate here; vehicles are managed separately
   
   return (
     <div style={{ padding: '20px' }}>
@@ -13,7 +13,6 @@ const Profile = () => {
         </div>
         <div>
           <h2 style={{ marginBottom: '4px' }}>{user?.email || 'Pengguna'}</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>SBY 1234 A • Mobil</p>
         </div>
       </div>
 
@@ -21,9 +20,10 @@ const Profile = () => {
         <h3 style={{ fontSize: '1rem', color: 'var(--text-muted)', marginBottom: '12px', paddingLeft: '8px' }}>AKUN SAYA</h3>
         <div className="card" style={{ margin: '0', padding: '8px 16px' }}>
           <ProfileMenuItem icon={<User size={20} />} label="Data Pribadi" />
-          <ProfileMenuItem icon={<Car size={20} />} label="Kendaraan Terdaftar" />
         </div>
       </div>
+
+      {/* Vehicle management moved to /profile/vehicles */}
 
       <div style={{ marginBottom: '24px' }}>
         <h3 style={{ fontSize: '1rem', color: 'var(--text-muted)', marginBottom: '12px', paddingLeft: '8px' }}>PENGATURAN</h3>

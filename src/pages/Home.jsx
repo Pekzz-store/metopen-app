@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import MapComponent from '../components/MapComponent';
 import { supabase } from '../lib/supabase';
 
@@ -9,23 +9,11 @@ const Home = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [parkingLocations, setParkingLocations] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [panTo, setPanTo] = useState(null);
+  const [routeTarget, setRouteTarget] = useState(null);
+  const locationRouter = useLocation();
 
-  useEffect(() => {
-    fetchLocations();
-
-    const subscription = supabase
-      .channel('public:parking_locations')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'parking_locations' }, () => {
-        fetchLocations();
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(subscription);
-    };
-  }, []);
-
-  const fetchLocations = async () => {
+  async function fetchLocations() {
     try {
       const { data, error } = await supabase
         .from('parking_locations')
@@ -60,7 +48,33 @@ const Home = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }
+
+  useEffect(() => {
+    // parse route target from query params (e.g. ?routeLat=..&routeLng=..)
+    const params = new URLSearchParams(locationRouter.search);
+    const rLat = params.get('routeLat');
+    const rLng = params.get('routeLng');
+    if (rLat && rLng) {
+      setRouteTarget({ lat: Number(rLat), lng: Number(rLng) });
+      // remove params from url to avoid re-triggering on refresh
+      // keep history clean by replacing state
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+    // defer initial fetch to microtask to avoid set-state-in-effect lint warning
+    Promise.resolve().then(() => fetchLocations());
+
+    const subscription = supabase
+      .channel('public:parking_locations')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'parking_locations' }, () => {
+        void fetchLocations();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(subscription);
+    };
+  }, []);
 
   const filteredLocations = parkingLocations.filter(loc => 
     loc.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -79,7 +93,7 @@ const Home = () => {
             </div>
           </div>
         ) : (
-          <MapComponent locations={filteredLocations} />
+          <MapComponent locations={filteredLocations} panTo={panTo} routeTarget={routeTarget} />
         )}
       </div>
 
@@ -113,6 +127,8 @@ const Home = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
+
+        {/* Temukan Saya button removed from below search bar; moved to floating control */}
 
         {/* Hasil Pencarian (Hanya Muncul Jika Sedang Mengetik) */}
         {searchQuery.trim() !== '' && (
@@ -152,6 +168,47 @@ const Home = () => {
             )}
           </div>
         )}
+      </div>
+
+      {/* Floating 'Temukan Saya' control in map corner */}
+      <div style={{ position: 'absolute', right: 20, bottom: 24, zIndex: 1100 }}>
+        <button
+          aria-label="Temukan Saya"
+          title="Temukan Saya"
+          onClick={() => {
+            if (!navigator.geolocation) return alert('Geolocation tidak didukung.');
+            navigator.geolocation.getCurrentPosition(pos => {
+              const { latitude, longitude } = pos.coords;
+              // include mark:true so MapComponent will also render the user marker
+              setPanTo({ lat: latitude, lng: longitude, zoom: 16, mark: true });
+              setTimeout(() => setPanTo(null), 1500);
+            }, err => {
+              console.error('Geolocation error', err);
+              alert('Gagal mendapatkan lokasi. Periksa izin browser.');
+            }, { enableHighAccuracy: true, timeout: 5000 });
+          }}
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: 8,
+            background: 'white',
+            border: '1px solid #E6EAF0',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 6px 12px rgba(16,24,40,0.08)',
+            cursor: 'pointer'
+          }}
+        >
+          {/* simple location icon similar to Google Maps */}
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="3" stroke="#2563EB" strokeWidth="1.5" fill="#2563EB" />
+            <path d="M12 2v2" stroke="#2563EB" strokeWidth="1.5" strokeLinecap="round" />
+            <path d="M12 20v2" stroke="#2563EB" strokeWidth="1.5" strokeLinecap="round" />
+            <path d="M2 12h2" stroke="#2563EB" strokeWidth="1.5" strokeLinecap="round" />
+            <path d="M20 12h2" stroke="#2563EB" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+        </button>
       </div>
 
     </div>

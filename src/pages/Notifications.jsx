@@ -1,5 +1,4 @@
-import React from 'react';
-import { Bell, Info, CheckCircle, AlertCircle } from 'lucide-react';
+import { Info, CheckCircle, AlertCircle } from 'lucide-react';
 
 const Notifications = () => {
   const notifs = [

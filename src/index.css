@@ -286,3 +286,8 @@ body {
   background: var(--bg-color);
   min-height: 100vh;
 }
+
+/* Hide leaflet-routing-machine instructions panel */
+.leaflet-routing-container {
+  display: none !important;
+}

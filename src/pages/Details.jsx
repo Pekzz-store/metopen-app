@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Clock, MapPin, DollarSign, Star, Car, Check } from 'lucide-react';
 import { supabase } from '../lib/supabase';
@@ -163,7 +163,8 @@ const Details = () => {
       </div>
 
       <div style={{ display: 'flex', gap: '12px' }}>
-        <button className="btn btn-outline" style={{ flex: 1 }} onClick={() => navigate('/navigation')}>
+        <button className="btn btn-outline" style={{ flex: 1 }} 
+        onClick={() => navigate(`/?routeLat=${location.lat}&routeLng=${location.lng}`)}>
           <MapPin size={18} /> Rute
         </button>
         <button 

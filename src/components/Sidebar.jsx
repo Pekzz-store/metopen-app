@@ -1,7 +1,7 @@
-import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Map as MapIcon, Navigation, Bell, User, LogOut } from 'lucide-react';
+import { Map as MapIcon, Navigation, User, LogOut, Car } from 'lucide-react';
 import { useAuth } from '../lib/AuthContext';
+import AppBrand from './AppBrand';
 
 const Sidebar = () => {
   const { signOut, user } = useAuth();
@@ -9,8 +9,7 @@ const Sidebar = () => {
   return (
     <aside className="sidebar">
       <div className="sidebar-header">
-        <h1>Smart Parking</h1>
-        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px' }}>Kota Surabaya</div>
+        <AppBrand compact={true} />
       </div>
       
       <nav className="sidebar-nav">
@@ -25,7 +24,11 @@ const Sidebar = () => {
 
         <NavLink to="/profile" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
           <User size={20} />
-          <span>Profil & Kendaraan</span>
+          <span>Profil</span>
+        </NavLink>
+        <NavLink to="/profile/vehicles" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+          <Car size={20} />
+          <span>Kendaraan</span>
         </NavLink>
       </nav>
 

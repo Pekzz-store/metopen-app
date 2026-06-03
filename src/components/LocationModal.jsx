@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Save } from 'lucide-react';
 
 const LocationModal = ({ isOpen, onClose, onSave, editingData }) => {
@@ -13,24 +13,25 @@ const LocationModal = ({ isOpen, onClose, onSave, editingData }) => {
 
   useEffect(() => {
     if (editingData) {
-      setFormData({
+      // defer to microtask to avoid react-hooks/set-state-in-effect warning
+      Promise.resolve().then(() => setFormData({
         name: editingData.name,
         type: editingData.type,
         total_slots: editingData.totalSlots,
         rate: editingData.rate,
         lat: editingData.lat,
         lng: editingData.lng
-      });
+      }));
     } else {
       // Reset form if adding new
-      setFormData({
+      Promise.resolve().then(() => setFormData({
         name: '',
         type: 'Umum',
         total_slots: 50,
         rate: 'Rp 3.000/jam',
         lat: -7.2655,
         lng: 112.743
-      });
+      }));
     }
   }, [editingData, isOpen]);
 

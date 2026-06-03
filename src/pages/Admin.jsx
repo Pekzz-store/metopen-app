@@ -1,15 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   LayoutDashboard, 
   Map as MapIcon, 
   Car, 
-  BarChart3, 
   Users, 
   FileText, 
   Settings, 
-  LogOut, 
-  Search, 
-  Bell,
+  LogOut,  
   MapPin,
   TrendingUp,
   Activity
@@ -21,29 +18,17 @@ import {
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../lib/AuthContext';
 import MapComponent from '../components/MapComponent';
+import { useLocation as useRouterLocation } from 'react-router-dom';
 import LocationModal from '../components/LocationModal';
+import Reports from './Reports';
+import UserModal from '../components/UserModal';
+import AppBrand from '../components/AppBrand';
 
 // Mock data untuk grafik
-const mockUsageData = [
-  { time: '00:00', penggunaan: 120, kapasitas: 500 },
-  { time: '03:00', penggunaan: 80, kapasitas: 500 },
-  { time: '06:00', penggunaan: 200, kapasitas: 500 },
-  { time: '09:00', penggunaan: 420, kapasitas: 500 },
-  { time: '12:00', penggunaan: 480, kapasitas: 500 },
-  { time: '15:00', penggunaan: 450, kapasitas: 500 },
-  { time: '18:00', penggunaan: 490, kapasitas: 500 },
-  { time: '21:00', penggunaan: 350, kapasitas: 500 },
-];
+// initial placeholder; will be replaced with aggregated data from `reservations`
+const mockUsageData = Array.from({ length: 24 }).map((_, h) => ({ time: `${String(h).padStart(2, '0')}:00`, penggunaan: 0, kapasitas: 0 }));
 
-const mockPeakHourData = [
-  { time: '07:00', volume: 180 },
-  { time: '08:00', volume: 320 },
-  { time: '09:00', volume: 420 },
-  { time: '12:00', volume: 480 },
-  { time: '17:00', volume: 450 },
-  { time: '18:00', volume: 490 },
-  { time: '19:00', volume: 380 },
-];
+const initialPeakHourData = Array.from({ length: 24 }).map((_, h) => ({ time: `${String(h).padStart(2, '0')}:00`, volume: 0 }));
 
 const Admin = () => {
   const { signOut, user } = useAuth();
@@ -57,6 +42,8 @@ const Admin = () => {
   // CRUD State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingData, setEditingData] = useState(null);
+  const [isUserModalOpen, setIsUserModalOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
   
   const [stats, setStats] = useState({
     totalLocations: 0,
@@ -64,6 +51,8 @@ const Admin = () => {
     availableSlots: 0,
     occupancyRate: 0,
   });
+  const [usageData, setUsageData] = useState(mockUsageData);
+  const [peakHourData, setPeakHourData] = useState(initialPeakHourData);
 
   useEffect(() => {
     fetchData();
@@ -87,7 +76,22 @@ const Admin = () => {
     };
   }, []);
 
-  const fetchData = async () => {
+  // Check router location state to see if we should open editing modal for a location
+  const routerLocation = useRouterLocation();
+  useEffect(() => {
+    const openEditId = routerLocation.state?.openEditId;
+    if (openEditId && locations.length > 0) {
+      const loc = locations.find(l => String(l.id) === String(openEditId));
+      if (loc) {
+        setEditingData(loc);
+        setIsModalOpen(true);
+        // clear the state to avoid reopening on back/refresh
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
+  }, [routerLocation, locations]);
+
+  async function fetchData() {
     try {
       // Ambil data lokasi
       const { data: locData, error: locError } = await supabase.from('parking_locations').select('*');
@@ -97,16 +101,28 @@ const Admin = () => {
       const { data: resData, error: resError } = await supabase.from('reservations').select('*, parking_locations(name)').order('created_at', { ascending: false });
       if (resError) throw resError;
 
-      // Ambil data profil (seluruh user terdaftar)
-      const { data: profData, error: profError } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
+      // Ambil data profil (seluruh user terdaftar) beserta kendaraan terkait
+      // Jika RLS mencegah sub-select ke `vehicles`, kita menggunakan RPC admin yang dibuat di sql/admin_profiles_with_vehicles.sql
+      let profData = null;
+      let profError = null;
+      try {
+        const rpcRes = await supabase.rpc('admin_profiles_with_vehicles');
+        if (rpcRes.error) throw rpcRes.error;
+        // rpc returns rows matching the RETURNS TABLE signature
+        profData = rpcRes.data || [];
+      } catch (rpcErr) {
+        // fallback: coba ambil via relation (mungkin kosong karena RLS)
+        const fallback = await supabase.from('profiles').select('*, vehicles(license_plate, created_at)').order('created_at', { ascending: false });
+        profData = fallback.data || [];
+        profError = fallback.error || rpcErr;
+        if (profError) console.warn('Profiles fetch fallback error:', profError);
+      }
       if (profError) {
         console.error("Supabase Error fetching profiles:", profError);
         alert("Error Supabase (Profiles): " + profError.message);
       }
 
-      setReservations(resData || []);
-      setProfiles(profData || []);
-      
+      // Format lokasi terlebih dahulu sehingga dapat digunakan untuk perhitungan statistik dan chart
       const formattedData = locData.map(item => {
         let computedStatus = 'available';
         if (item.available_slots <= 0) {
@@ -127,8 +143,37 @@ const Admin = () => {
           rate: item.rate
         };
       });
-      
+
+      setReservations(resData || []);
+      setProfiles(profData || []);
       setLocations(formattedData);
+
+      // Build usage chart data: jumlah reservasi per jam selama 24 jam terakhir
+      try {
+        const now = new Date();
+        const start = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+        // initialize 24-hour buckets
+        const buckets = Array.from({ length: 24 }).map((_, i) => ({ time: `${String(i).padStart(2, '0')}:00`, penggunaan: 0 }));
+
+        (resData || []).forEach(r => {
+          const created = new Date(r.created_at);
+          if (created >= start && created <= now) {
+            const hour = created.getHours();
+            buckets[hour].penggunaan += 1;
+          }
+        });
+
+        const totalCapacity = formattedData.reduce((s, l) => s + (l.totalSlots || 0), 0);
+        const usageWithCap = buckets.map(b => ({ ...b, kapasitas: totalCapacity }));
+        setUsageData(usageWithCap);
+
+        // Peak hour distribution for bar chart (volume per hour)
+        const peak = buckets.map(b => ({ time: b.time, volume: b.penggunaan }));
+        setPeakHourData(peak);
+      } catch (err) {
+        console.warn('Error building usage chart data', err);
+      }
 
       // Hitung statistik dinamis
       const totalLocs = formattedData.length;
@@ -215,6 +260,40 @@ const Admin = () => {
     }
   };
 
+  // --- User CRUD handlers ---
+  const openEditUser = (profile) => { setEditingUser(profile); setIsUserModalOpen(true); };
+
+  const handleSaveUser = async (form) => {
+    try {
+      if (form.id) {
+        // Update profile email only; vehicles are managed separately
+        const { error } = await supabase.rpc('update_profile', { p_id: form.id, p_email: form.email });
+        if (error) throw error;
+      } else {
+        // Create profile (email only)
+        const { error } = await supabase.rpc('create_profile', { p_email: form.email });
+        if (error) throw error;
+      }
+      setIsUserModalOpen(false);
+      fetchData();
+    } catch (err) {
+      console.error('Error saving user:', err);
+      alert('Terjadi kesalahan saat menyimpan pengguna: ' + (err.message || err));
+    }
+  };
+
+  const handleDeleteUser = async (id) => {
+    if (!window.confirm('Hapus pengguna ini?')) return;
+    try {
+      const { error } = await supabase.rpc('delete_profile', { p_id: id });
+      if (error) throw error;
+      fetchData();
+    } catch (err) {
+      console.error('Error deleting user:', err);
+      alert('Gagal menghapus pengguna: ' + (err.message || err));
+    }
+  };
+
   const renderContent = () => {
     if (loading) {
       return <div style={{ padding: '32px' }}>Memuat data sistem...</div>;
@@ -223,6 +302,8 @@ const Admin = () => {
     switch (activeTab) {
       case 'dashboard':
         return renderDashboard();
+        case 'laporan':
+          return <Reports />;
       case 'peta':
         return renderMap();
       case 'manajemen':
@@ -290,14 +371,14 @@ const Admin = () => {
           
           <div style={{ height: '300px', width: '100%' }}>
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={mockUsageData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+              <LineChart data={usageData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
                 <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fill: '#64748B', fontSize: 12 }} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748B', fontSize: 12 }} />
                 <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }} />
                 <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
-                <Line type="monotone" dataKey="penggunaan" name="Penggunaan" stroke="#3B82F6" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
-                <Line type="step" dataKey="kapasitas" name="Kapasitas" stroke="#10B981" strokeWidth={2} strokeDasharray="5 5" dot={false} />
+                  <Line type="monotone" dataKey="penggunaan" name="Penggunaan" stroke="#3B82F6" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                  <Line type="step" dataKey="kapasitas" name="Kapasitas" stroke="#10B981" strokeWidth={2} strokeDasharray="5 5" dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -306,11 +387,11 @@ const Admin = () => {
         {/* Bar Chart Card */}
         <div style={{ backgroundColor: 'white', borderRadius: '16px', padding: '24px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
           <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: '#1E293B', margin: '0 0 4px 0' }}>Distribusi Jam Sibuk</h3>
-          <p style={{ fontSize: '0.85rem', color: '#64748B', margin: '0 0 24px 0' }}>Volume kendaraan per jam</p>
+          <p style={{ fontSize: '0.85rem', color: '#64748B', margin: '0 0 24px 0' }}>Volume kendaraan per jam (24 jam terakhir) — sumber: tabel reservations</p>
           
           <div style={{ height: '300px', width: '100%' }}>
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={mockPeakHourData} margin={{ top: 5, right: 0, bottom: 5, left: -20 }}>
+              <BarChart data={peakHourData} margin={{ top: 5, right: 0, bottom: 5, left: -20 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
                 <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fill: '#64748B', fontSize: 12 }} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748B', fontSize: 12 }} />
@@ -327,7 +408,7 @@ const Admin = () => {
 
   const renderMap = () => (
     <div style={{ height: 'calc(100vh - 72px)', position: 'relative' }}>
-      <MapComponent locations={locations} />
+      <MapComponent locations={locations} isAdmin={true} />
       <div style={{ 
         position: 'absolute', top: '20px', right: '20px', zIndex: 1000, 
         backgroundColor: 'white', padding: '16px', borderRadius: '12px',
@@ -414,11 +495,17 @@ const Admin = () => {
     const combinedUsers = profiles.map(profile => {
       // Cari transaksi terakhir dari user ini
       const userRes = reservations.find(r => r.user_name === profile.email);
-      
+
+      // Ambil plat dari tabel vehicles (relasi) jika ada, gunakan yang paling baru
+      const vehicleFromProfile = (profile.vehicles && profile.vehicles.length > 0) ? profile.vehicles[0].license_plate : null;
+
+      // Preferensi: plat dari kendaraan pengguna (vehicles) > reservation terakhir > '-'
+      const plate = vehicleFromProfile || (userRes ? userRes.license_plate : '-') ;
+
       return {
         email: profile.email,
         created_at: new Date(profile.created_at).toLocaleDateString('id-ID'),
-        license_plate: userRes ? userRes.license_plate : '-',
+        license_plate: plate,
         last_booking: userRes ? new Date(userRes.created_at).toLocaleString('id-ID') : '-',
         location: userRes?.parking_locations?.name || '-'
       };
@@ -431,8 +518,10 @@ const Admin = () => {
             <h2 style={{ fontSize: '1.75rem', fontWeight: 700, color: '#1E293B', margin: '0 0 4px 0' }}>Data Pengguna</h2>
             <p style={{ color: '#64748B', margin: 0 }}>Daftar pengguna yang melakukan transaksi parkir</p>
           </div>
-          <div style={{ padding: '8px 16px', backgroundColor: '#EFF6FF', color: '#3B82F6', borderRadius: '8px', fontWeight: 600 }}>
-            Total: {combinedUsers.length} Pengguna Terdaftar
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+            <div style={{ padding: '8px 16px', backgroundColor: '#EFF6FF', color: '#3B82F6', borderRadius: '8px', fontWeight: 600 }}>
+              Total: {combinedUsers.length} Pengguna Terdaftar
+            </div>
           </div>
         </div>
 
@@ -444,7 +533,8 @@ const Admin = () => {
                 <th style={{ padding: '16px 24px', color: '#64748B', fontWeight: 600, fontSize: '0.85rem' }}>TGL MENDAFTAR</th>
                 <th style={{ padding: '16px 24px', color: '#64748B', fontWeight: 600, fontSize: '0.85rem' }}>LOKASI TERAKHIR</th>
                 <th style={{ padding: '16px 24px', color: '#64748B', fontWeight: 600, fontSize: '0.85rem' }}>KENDARAAN</th>
-                <th style={{ padding: '16px 24px', color: '#64748B', fontWeight: 600, fontSize: '0.85rem', textAlign: 'right' }}>TRANSAKSI TERAKHIR</th>
+                <th style={{ padding: '16px 24px', color: '#64748B', fontWeight: 600, fontSize: '0.85rem' }}>TRANSAKSI TERAKHIR</th>
+                <th style={{ padding: '16px 24px', color: '#64748B', fontWeight: 600, fontSize: '0.85rem', textAlign: 'right' }}>AKSI</th>
               </tr>
             </thead>
             <tbody>
@@ -465,13 +555,15 @@ const Admin = () => {
                       {u.license_plate}
                     </div>
                   </td>
-                  <td style={{ padding: '16px 24px', textAlign: 'right', color: '#64748B' }}>
-                    {u.last_booking}
+                  <td style={{ padding: '16px 24px', color: '#64748B' }}>{u.last_booking}</td>
+                  <td style={{ padding: '16px 24px', textAlign: 'right' }}>
+                    <button onClick={() => openEditUser(profiles.find(p => p.email === u.email))} style={{ backgroundColor: 'transparent', border: 'none', color: '#3B82F6', fontWeight: 600, cursor: 'pointer', marginRight: '12px' }}>Edit</button>
+                    <button onClick={() => handleDeleteUser(profiles.find(p => p.email === u.email)?.id)} style={{ backgroundColor: 'transparent', border: 'none', color: '#EF4444', fontWeight: 600, cursor: 'pointer' }}>Hapus</button>
                   </td>
                 </tr>
               )) : (
                 <tr>
-                  <td colSpan="5" style={{ padding: '32px', textAlign: 'center', color: '#64748B' }}>
+                  <td colSpan="6" style={{ padding: '32px', textAlign: 'center', color: '#64748B' }}>
                     Data pengguna belum tersedia. Pastikan skrip SQL telah dijalankan.
                   </td>
                 </tr>
@@ -479,6 +571,8 @@ const Admin = () => {
             </tbody>
           </table>
         </div>
+
+        <UserModal isOpen={isUserModalOpen} onClose={() => setIsUserModalOpen(false)} onSave={handleSaveUser} editingData={editingUser} />
       </div>
     );
   };
@@ -527,17 +621,14 @@ const Admin = () => {
       {/* Sidebar */}
       <aside style={{ width: '260px', backgroundColor: '#FFFFFF', borderRight: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column' }}>
         <div style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ background: '#3B82F6', color: 'white', padding: '8px', borderRadius: '8px', display: 'flex' }}>
-            <span style={{ fontWeight: 'bold', fontSize: '1.2rem' }}>P</span>
-          </div>
-          <h1 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#1E293B', margin: 0 }}>Smart Parking</h1>
+          <AppBrand compact={false} />
         </div>
 
         <nav style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
           <AdminNavItem icon={<LayoutDashboard size={20} />} label="Dashboard" active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
           <AdminNavItem icon={<MapIcon size={20} />} label="Peta Parkir" active={activeTab === 'peta'} onClick={() => setActiveTab('peta')} />
           <AdminNavItem icon={<Car size={20} />} label="Manajemen Parkir" active={activeTab === 'manajemen'} onClick={() => setActiveTab('manajemen')} />
-          <AdminNavItem icon={<BarChart3 size={20} />} label="Analitik" active={activeTab === 'analitik'} onClick={() => setActiveTab('analitik')} />
+          {/* Analitik dihapus — gunakan Dashboard / Laporan atau fitur lain yang diinginkan */}
           <AdminNavItem icon={<Users size={20} />} label="Pengguna" active={activeTab === 'pengguna'} onClick={() => setActiveTab('pengguna')} />
           <AdminNavItem icon={<FileText size={20} />} label="Laporan" active={activeTab === 'laporan'} onClick={() => setActiveTab('laporan')} />
           <AdminNavItem icon={<Settings size={20} />} label="Pengaturan" active={activeTab === 'pengaturan'} onClick={() => setActiveTab('pengaturan')} />
@@ -566,17 +657,7 @@ const Admin = () => {
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 32px',
           flexShrink: 0
         }}>
-          <div style={{ 
-            display: 'flex', alignItems: 'center', backgroundColor: '#F1F5F9', 
-            padding: '10px 16px', borderRadius: '8px', width: '300px'
-          }}>
-            <Search size={18} color="#94A3B8" />
-            <input 
-              type="text" 
-              placeholder="Cari data..." 
-              style={{ border: 'none', backgroundColor: 'transparent', outline: 'none', marginLeft: '12px', width: '100%' }}
-            />
-          </div>
+          <div style={{ width: '300px' }} />
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
             <div style={{ 
@@ -588,10 +669,6 @@ const Admin = () => {
               Data Real-time
             </div>
             
-            <div style={{ position: 'relative', cursor: 'pointer' }}>
-              <Bell size={24} color="#64748B" />
-              <div style={{ position: 'absolute', top: 0, right: 0, width: '10px', height: '10px', backgroundColor: '#EF4444', borderRadius: '50%', border: '2px solid white' }}></div>
-            </div>
             
             <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#3B82F6', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
               {user?.email?.[0]?.toUpperCase() || 'A'}

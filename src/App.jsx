@@ -1,4 +1,4 @@
-import React from 'react';
+// automatic JSX runtime used; no default React import needed
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './lib/AuthContext';
 import Home from './pages/Home';
@@ -6,10 +6,12 @@ import Navigation from './pages/Navigation';
 import Details from './pages/Details';
 import Notifications from './pages/Notifications';
 import Profile from './pages/Profile';
+import MyVehicles from './pages/MyVehicles';
 import Admin from './pages/Admin';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import UserLayout from './components/UserLayout';
+import Reports from './pages/Reports';
 
 const ProtectedRoute = ({ children, requireAdmin }) => {
   const { user, isAdmin } = useAuth();
@@ -54,6 +56,8 @@ function App() {
             <Route path="/details/:id" element={<Details />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/profile/vehicles" element={<MyVehicles />} />
+            <Route path="/reports" element={<Reports />} />
           </Route>
 
           {/* Admin Dashboard Route (Protected) */}
