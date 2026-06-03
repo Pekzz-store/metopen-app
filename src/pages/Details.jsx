@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Clock, MapPin, DollarSign, Star, Car, Check } from 'lucide-react';
 import { supabase } from '../lib/supabase';
@@ -13,6 +13,29 @@ const Details = () => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [currentLocation, setCurrentLocation] = useState(state?.location || null);
+  const [vehiclePlate, setVehiclePlate] = useState('SBY 1234 A');
+
+  // Fetch real vehicle data for the user
+  useEffect(() => {
+    async function fetchUserVehicle() {
+      if (!user) return;
+      try {
+        const { data, error } = await supabase
+          .from('vehicles')
+          .select('license_plate')
+          .eq('user_id', user.id)
+          .limit(1)
+          .single();
+        
+        if (data && data.license_plate) {
+          setVehiclePlate(data.license_plate);
+        }
+      } catch (err) {
+        console.error("Error fetching vehicle:", err);
+      }
+    }
+    fetchUserVehicle();
+  }, [user]);
 
   // Fallback if data is missing
   const location = currentLocation || {
@@ -37,7 +60,7 @@ const Details = () => {
           { 
             parking_id: location.id, 
             user_name: user?.email || 'User Anonim',
-            license_plate: 'SBY 1234 A' 
+            license_plate: vehiclePlate 
           }
         ]);
 
