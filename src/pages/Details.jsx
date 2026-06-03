@@ -13,7 +13,7 @@ const Details = () => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [currentLocation, setCurrentLocation] = useState(state?.location || null);
-  const [vehiclePlate, setVehiclePlate] = useState('SBY 1234 A');
+  const [vehiclePlate, setVehiclePlate] = useState('Belum ada kendaraan');
 
   // Fetch real vehicle data for the user
   useEffect(() => {
