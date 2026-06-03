@@ -290,6 +290,35 @@ body {
 /* Utility classes for responsive text */
 .mobile-text { display: none; }
 
+/* Admin Responsive Layout */
+.admin-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  margin-bottom: 24px;
+}
+.admin-charts-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+}
+.admin-table-container {
+  background-color: white;
+  border-radius: 16px;
+  border: 1px solid #E2E8F0;
+  overflow-x: auto;
+  width: 100%;
+}
+
+@media (max-width: 1024px) {
+  .admin-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .admin-charts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Hide leaflet-routing-machine instructions panel */
 .leaflet-routing-container {
   display: none !important;
@@ -323,7 +352,7 @@ body {
   }
 
   .sidebar-header, .sidebar-footer {
-    display: none; /* Hide logo and user info on bottom nav */
+    display: none !important; /* Hide logo and user info on bottom nav */
   }
 
   .sidebar-nav {
@@ -435,6 +464,37 @@ body {
   }
   .vehicle-form-row > * {
     width: 100% !important;
+  }
+
+  /* Admin Dashboard specific */
+  .admin-stats-grid {
+    grid-template-columns: 1fr;
+  }
+  .admin-topbar-spacer {
+    display: none;
+  }
+  .admin-topbar-badge span {
+    display: none;
+  }
+  .admin-topbar-content {
+    gap: 12px !important;
+    width: 100%;
+    justify-content: flex-end;
+  }
+  .admin-sidebar-nav {
+    overflow-x: auto;
+    padding-bottom: 4px;
+    justify-content: flex-start !important;
+  }
+  .admin-sidebar-nav::-webkit-scrollbar {
+    display: none;
+  }
+  .admin-sidebar-nav .nav-item {
+    flex: 0 0 auto;
+    min-width: 80px;
+  }
+  .admin-header-title h2 {
+    font-size: 1.25rem !important;
   }
 }
 

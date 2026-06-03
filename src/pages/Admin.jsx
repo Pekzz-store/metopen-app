@@ -334,14 +334,14 @@ const Admin = () => {
   };
 
   const renderDashboard = () => (
-    <div style={{ padding: '32px', overflowY: 'auto' }}>
-      <div style={{ marginBottom: '24px' }}>
+    <div className="page-container" style={{ overflowY: 'auto' }}>
+      <div className="admin-header-title" style={{ marginBottom: '24px' }}>
         <h2 style={{ fontSize: '1.75rem', fontWeight: 700, color: '#1E293B', margin: '0 0 4px 0' }}>Dashboard Utama</h2>
         <p style={{ color: '#64748B', margin: 0 }}>Ringkasan data parkir Kota Surabaya secara real-time</p>
       </div>
 
       {/* KPI Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px', marginBottom: '24px' }}>
+      <div className="admin-stats-grid">
         <KPICard 
           title="Total Lokasi Parkir" 
           value={stats.totalLocations} 
@@ -373,7 +373,7 @@ const Admin = () => {
       </div>
 
       {/* Charts Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
+      <div className="admin-charts-grid">
         
         {/* Line Chart Card */}
         <div style={{ backgroundColor: 'white', borderRadius: '16px', padding: '24px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
@@ -452,7 +452,7 @@ const Admin = () => {
         <button className="btn btn-primary" style={{ width: 'auto' }} onClick={() => { setEditingData(null); setIsModalOpen(true); }}>+ Tambah Lokasi</button>
       </div>
 
-      <div style={{ backgroundColor: 'white', borderRadius: '16px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
+      <div className="admin-table-container">
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
           <thead style={{ backgroundColor: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
             <tr>
@@ -536,7 +536,7 @@ const Admin = () => {
           </div>
         </div>
 
-        <div style={{ backgroundColor: 'white', borderRadius: '16px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
+        <div className="admin-table-container">
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
             <thead style={{ backgroundColor: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
               <tr>
@@ -643,59 +643,53 @@ const Admin = () => {
   );
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#F8FAFC', fontFamily: 'Inter, sans-serif' }}>
+    <div className="app-layout" style={{ backgroundColor: '#F8FAFC', fontFamily: 'Inter, sans-serif' }}>
       
       {/* Sidebar */}
-      <aside style={{ width: '260px', backgroundColor: '#FFFFFF', borderRight: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <aside className="sidebar">
+        <div className="sidebar-header" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <AppBrand compact={false} />
         </div>
 
-        <nav style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
+        <nav className="sidebar-nav admin-sidebar-nav">
           <AdminNavItem icon={<LayoutDashboard size={20} />} label="Dashboard" active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
           <AdminNavItem icon={<MapIcon size={20} />} label="Peta Parkir" active={activeTab === 'peta'} onClick={() => setActiveTab('peta')} />
           <AdminNavItem icon={<Car size={20} />} label="Manajemen Parkir" active={activeTab === 'manajemen'} onClick={() => setActiveTab('manajemen')} />
-          {/* Analitik dihapus — gunakan Dashboard / Laporan atau fitur lain yang diinginkan */}
           <AdminNavItem icon={<Users size={20} />} label="Pengguna" active={activeTab === 'pengguna'} onClick={() => setActiveTab('pengguna')} />
           <AdminNavItem icon={<FileText size={20} />} label="Laporan" active={activeTab === 'laporan'} onClick={() => setActiveTab('laporan')} />
           <AdminNavItem icon={<Settings size={20} />} label="Profil" active={activeTab === 'profil'} onClick={() => setActiveTab('profil')} />
         </nav>
 
-        <div style={{ padding: '24px', borderTop: '1px solid #E2E8F0' }}>
+        <div className="sidebar-footer">
           <button 
             onClick={signOut} 
+            className="nav-item"
             style={{ 
-              display: 'flex', alignItems: 'center', gap: '12px', width: '100%', padding: '12px',
-              backgroundColor: 'transparent', border: 'none', color: '#64748B', fontWeight: 600,
-              cursor: 'pointer', borderRadius: '8px', transition: '0.2s'
+              width: '100%', backgroundColor: 'transparent', border: 'none', color: '#EF4444', 
+              cursor: 'pointer'
             }}
           >
-            <LogOut size={20} /> Keluar
+            <LogOut size={20} /> <span>Keluar</span>
           </button>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <main className="main-content" style={{ overflow: 'hidden' }}>
         
         {/* Topbar */}
-        <header style={{ 
-          height: '72px', backgroundColor: '#FFFFFF', borderBottom: '1px solid #E2E8F0',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 32px',
-          flexShrink: 0
-        }}>
-          <div style={{ width: '300px' }} />
+        <header className="topbar">
+          <div className="admin-topbar-spacer" style={{ width: '300px' }} />
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-            <div style={{ 
+          <div className="admin-topbar-content" style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+            <div className="admin-topbar-badge" style={{ 
               display: 'flex', alignItems: 'center', gap: '8px', 
               padding: '6px 12px', backgroundColor: '#ECFDF5', border: '1px solid #A7F3D0', 
               borderRadius: '20px', color: '#059669', fontSize: '0.85rem', fontWeight: 600
             }}>
               <div style={{ width: '8px', height: '8px', backgroundColor: '#10B981', borderRadius: '50%' }}></div>
-              Data Real-time
+              <span>Data Real-time</span>
             </div>
-            
             
             <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#3B82F6', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
               {user?.email?.[0]?.toUpperCase() || 'A'}
@@ -724,14 +718,9 @@ const Admin = () => {
 const AdminNavItem = ({ icon, label, active, onClick }) => {
   return (
     <div 
+      className={`nav-item ${active ? 'active' : ''}`}
       onClick={onClick}
-      style={{ 
-        display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', 
-        backgroundColor: active ? '#EFF6FF' : 'transparent',
-        color: active ? '#3B82F6' : '#64748B',
-        borderRadius: '8px', cursor: 'pointer', fontWeight: 500,
-        transition: '0.2s'
-      }}
+      style={{ cursor: 'pointer' }}
     >
       {icon}
       <span>{label}</span>
