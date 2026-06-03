@@ -28,13 +28,13 @@ const Sidebar = () => {
           </span>
         </NavLink>
 
-        <NavLink to="/profile" end className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-          <User size={20} />
-          <span>Profil</span>
-        </NavLink>
         <NavLink to="/profile/vehicles" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
           <Car size={20} />
           <span>Kendaraan</span>
+        </NavLink>
+        <NavLink to="/profile" end className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+          <User size={20} />
+          <span>Profil</span>
         </NavLink>
       </nav>
 
