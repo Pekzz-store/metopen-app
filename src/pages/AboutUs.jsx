@@ -22,7 +22,7 @@ const AboutUs = () => {
             <Info size={40} />
           </div>
           <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '8px' }}>Smart Parking</h2>
-          <span style={{ background: '#e0e7ff', color: '#4338ca', padding: '4px 12px', borderRadius: '999px', fontSize: '0.85rem', fontWeight: 600 }}>Versi 1.0.0</span>
+          <span style={{ background: '#e0e7ff', color: '#4338ca', padding: '4px 12px', borderRadius: '999px', fontSize: '0.85rem', fontWeight: 600 }}>Version 1.0.0 (Beta)</span>
         </div>
 
         <div style={{ marginBottom: '24px' }}>

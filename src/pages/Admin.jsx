@@ -9,7 +9,10 @@ import {
   LogOut,  
   MapPin,
   TrendingUp,
-  Activity
+  Activity,
+  Info,
+  Target,
+  Layers
 } from 'lucide-react';
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
@@ -318,7 +321,7 @@ const Admin = () => {
         return renderManagement();
       case 'pengguna':
         return renderUsers();
-      case 'pengaturan':
+      case 'profil':
         return renderSettings();
       default:
         return (
@@ -588,36 +591,52 @@ const Admin = () => {
   const renderSettings = () => (
     <div style={{ padding: '32px', overflowY: 'auto' }}>
       <div style={{ marginBottom: '24px' }}>
-        <h2 style={{ fontSize: '1.75rem', fontWeight: 700, color: '#1E293B', margin: '0 0 4px 0' }}>Pengaturan Akun</h2>
+        <h2 style={{ fontSize: '1.75rem', fontWeight: 700, color: '#1E293B', margin: '0 0 4px 0' }}>Profil Admin</h2>
         <p style={{ color: '#64748B', margin: 0 }}>Kelola profil administrator dan preferensi sistem</p>
       </div>
 
       <div style={{ backgroundColor: 'white', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '32px', maxWidth: '600px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '24px', marginBottom: '32px', paddingBottom: '32px', borderBottom: '1px solid #E2E8F0' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
           <div style={{ width: '80px', height: '80px', borderRadius: '50%', backgroundColor: '#3B82F6', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', fontWeight: 'bold' }}>
             {user?.email?.[0]?.toUpperCase() || 'A'}
           </div>
           <div>
             <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#1E293B', margin: '0 0 4px 0' }}>{user?.email || 'Administrator'}</h3>
-            <p style={{ color: '#64748B', margin: 0 }}>Super Admin Dishub Surabaya</p>
+            <p style={{ color: '#64748B', margin: 0, fontWeight: 500 }}>Role: Admin</p>
           </div>
         </div>
+      </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', backgroundColor: '#F8FAFC', borderRadius: '8px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <Settings size={20} color="#64748B" />
-              <span style={{ fontWeight: 500, color: '#1E293B' }}>Preferensi Notifikasi</span>
-            </div>
-            <button style={{ border: 'none', backgroundColor: 'transparent', color: '#3B82F6', fontWeight: 600, cursor: 'pointer' }}>Ubah</button>
+      {/* About Us Section */}
+      <div style={{ backgroundColor: 'white', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '32px', maxWidth: '600px', marginTop: '24px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+          <div style={{ width: '80px', height: '80px', borderRadius: '16px', background: '#3B82F6', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', boxShadow: '0 4px 12px rgba(59, 130, 246, 0.2)' }}>
+            <Info size={40} />
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', backgroundColor: '#F8FAFC', borderRadius: '8px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <Users size={20} color="#64748B" />
-              <span style={{ fontWeight: 500, color: '#1E293B' }}>Manajemen Akses Staff</span>
-            </div>
-            <button style={{ border: 'none', backgroundColor: 'transparent', color: '#3B82F6', fontWeight: 600, cursor: 'pointer' }}>Kelola</button>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '8px', color: '#1E293B' }}>Smart Parking</h2>
+          <span style={{ background: '#EFF6FF', color: '#3B82F6', padding: '4px 12px', borderRadius: '999px', fontSize: '0.85rem', fontWeight: 600 }}>Version 1.0.0 (Beta)</span>
+        </div>
+
+        <div style={{ marginBottom: '24px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', color: '#3B82F6', fontWeight: 600 }}>
+            <Layers size={20} />
+            <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Tentang Aplikasi</h3>
           </div>
+          <p style={{ lineHeight: '1.6', color: '#64748B', margin: 0 }}>
+            Aplikasi Smart Parking adalah solusi inovatif yang dirancang untuk mempermudah pengendara dalam mencari, memilih, dan menuju ke lokasi parkir yang tersedia secara real-time, khususnya di area Surabaya.
+          </p>
+        </div>
+
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', color: '#3B82F6', fontWeight: 600 }}>
+            <Target size={20} />
+            <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Tujuan Pembuatan</h3>
+          </div>
+          <ul style={{ lineHeight: '1.6', color: '#64748B', paddingLeft: '20px', margin: 0 }}>
+            <li style={{ marginBottom: '8px' }}>Menghemat waktu pengguna dalam mencari tempat parkir kosong.</li>
+            <li style={{ marginBottom: '8px' }}>Mengurangi kemacetan yang sering terjadi akibat antrean atau pencarian tempat parkir.</li>
+            <li>Memberikan rekomendasi parkir terbaik berdasarkan jarak dan kebutuhan pengguna.</li>
+          </ul>
         </div>
       </div>
     </div>
@@ -639,7 +658,7 @@ const Admin = () => {
           {/* Analitik dihapus — gunakan Dashboard / Laporan atau fitur lain yang diinginkan */}
           <AdminNavItem icon={<Users size={20} />} label="Pengguna" active={activeTab === 'pengguna'} onClick={() => setActiveTab('pengguna')} />
           <AdminNavItem icon={<FileText size={20} />} label="Laporan" active={activeTab === 'laporan'} onClick={() => setActiveTab('laporan')} />
-          <AdminNavItem icon={<Settings size={20} />} label="Pengaturan" active={activeTab === 'pengaturan'} onClick={() => setActiveTab('pengaturan')} />
+          <AdminNavItem icon={<Settings size={20} />} label="Profil" active={activeTab === 'profil'} onClick={() => setActiveTab('profil')} />
         </nav>
 
         <div style={{ padding: '24px', borderTop: '1px solid #E2E8F0' }}>
