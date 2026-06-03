@@ -204,13 +204,21 @@ const Admin = () => {
   const handleSaveLocation = async (formData) => {
     try {
       if (editingData) {
+        // Calculate new available slots based on the difference in total slots
+        const oldTotal = editingData.total_slots || editingData.totalSlots;
+        const newTotal = parseInt(formData.total_slots);
+        const diff = newTotal - oldTotal;
+        const oldAvail = editingData.available_slots || editingData.availableSlots;
+        const newAvail = Math.max(0, oldAvail + diff);
+
         // Update existing
         const { error } = await supabase
           .from('parking_locations')
           .update({
             name: formData.name,
             type: formData.type,
-            total_slots: parseInt(formData.total_slots),
+            total_slots: newTotal,
+            available_slots: newAvail,
             rate: formData.rate,
             lat: parseFloat(formData.lat),
             lng: parseFloat(formData.lng)

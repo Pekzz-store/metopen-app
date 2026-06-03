@@ -39,15 +39,18 @@ const Details = () => {
     fetchUserVehicles();
   }, [user]);
 
-  // Fallback if data is missing
-  const location = currentLocation || {
-    id: id,
-    name: "Memuat Data...",
-    type: "Umum",
-    status: 'full',
-    availableSlots: 0,
-    totalSlots: 0,
-    rate: "-",
+  // Normalize data (handle both camelCase from Recommendations and snake_case from direct Supabase fetch)
+  const locationRaw = currentLocation || {};
+  const location = {
+    id: locationRaw.id || id,
+    name: locationRaw.name || "Memuat Data...",
+    type: locationRaw.type || "Umum",
+    status: locationRaw.status || 'full',
+    availableSlots: locationRaw.availableSlots !== undefined ? locationRaw.availableSlots : (locationRaw.available_slots || 0),
+    totalSlots: locationRaw.totalSlots !== undefined ? locationRaw.totalSlots : (locationRaw.total_slots || 0),
+    rate: locationRaw.rate || "-",
+    lat: locationRaw.lat || 0,
+    lng: locationRaw.lng || 0,
   };
 
   const handleBookingClick = () => {
