@@ -24,11 +24,10 @@ const Details = () => {
           .from('vehicles')
           .select('license_plate')
           .eq('user_id', user.id)
-          .limit(1)
-          .single();
+          .limit(1);
         
-        if (data && data.license_plate) {
-          setVehiclePlate(data.license_plate);
+        if (data && data.length > 0) {
+          setVehiclePlate(data[0].license_plate);
         }
       } catch (err) {
         console.error("Error fetching vehicle:", err);
