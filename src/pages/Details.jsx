@@ -13,27 +13,28 @@ const Details = () => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [currentLocation, setCurrentLocation] = useState(state?.location || null);
-  const [vehiclePlate, setVehiclePlate] = useState('Belum ada kendaraan');
+  const [userVehicles, setUserVehicles] = useState([]);
+  const [selectedVehicle, setSelectedVehicle] = useState('');
 
   // Fetch real vehicle data for the user
   useEffect(() => {
-    async function fetchUserVehicle() {
+    async function fetchUserVehicles() {
       if (!user) return;
       try {
         const { data, error } = await supabase
           .from('vehicles')
-          .select('license_plate')
-          .eq('user_id', user.id)
-          .limit(1);
+          .select('license_plate, vehicle_type')
+          .eq('user_id', user.id);
         
         if (data && data.length > 0) {
-          setVehiclePlate(data[0].license_plate);
+          setUserVehicles(data);
+          setSelectedVehicle(data[0].license_plate);
         }
       } catch (err) {
-        console.error("Error fetching vehicle:", err);
+        console.error("Error fetching vehicles:", err);
       }
     }
-    fetchUserVehicle();
+    fetchUserVehicles();
   }, [user]);
 
   // Fallback if data is missing
@@ -59,7 +60,7 @@ const Details = () => {
           { 
             parking_id: location.id, 
             user_name: user?.email || 'User Anonim',
-            license_plate: vehiclePlate 
+            license_plate: selectedVehicle 
           }
         ]);
 
@@ -184,6 +185,25 @@ const Details = () => {
         </div>
       </div>
 
+      <div style={{ marginBottom: '20px' }}>
+        <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '0.9rem' }}>Pilih Kendaraan Anda</label>
+        {userVehicles.length > 0 ? (
+          <select 
+            value={selectedVehicle}
+            onChange={(e) => setSelectedVehicle(e.target.value)}
+            style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #E2E8F0', outline: 'none', background: 'white' }}
+          >
+            {userVehicles.map(v => (
+              <option key={v.license_plate} value={v.license_plate}>{v.license_plate} ({v.vehicle_type})</option>
+            ))}
+          </select>
+        ) : (
+          <div style={{ padding: '12px', background: '#FEE2E2', color: '#991B1B', borderRadius: '8px', fontSize: '0.85rem' }}>
+            Anda belum mendaftarkan kendaraan. Silakan tambahkan di halaman Profil.
+          </div>
+        )}
+      </div>
+
       <div style={{ display: 'flex', gap: '12px' }}>
         <button className="btn btn-outline" style={{ flex: 1 }} 
         onClick={() => navigate(`/?routeLat=${location.lat}&routeLng=${location.lng}`)}>
@@ -191,8 +211,8 @@ const Details = () => {
         </button>
         <button 
           className="btn btn-primary" 
-          style={{ flex: 2, opacity: location.availableSlots === 0 || loading ? 0.7 : 1 }}
-          disabled={location.availableSlots === 0 || loading}
+          style={{ flex: 2, opacity: location.availableSlots === 0 || loading || userVehicles.length === 0 ? 0.7 : 1 }}
+          disabled={location.availableSlots === 0 || loading || userVehicles.length === 0}
           onClick={handleBooking}
         >
           <Car size={18} /> {loading ? 'Memproses...' : 'Booking Sekarang'}
