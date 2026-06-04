@@ -230,7 +230,7 @@ const Details = () => {
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: 'white', borderRadius: '16px', width: '100%', maxWidth: '400px', overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)' }}>
             <div style={{ padding: '20px', borderBottom: '1px solid #E5E7EB', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Ringkasan Pembayaran</h3>
+              <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Ringkasan Booking</h3>
               <button onClick={() => !paymentProcessing && setShowPayment(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', lineHeight: 1 }}>&times;</button>
             </div>
             
@@ -252,7 +252,7 @@ const Details = () => {
               
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontWeight: 600 }}>Total Tagihan</span>
-                <span style={{ fontWeight: 700, fontSize: '1.2rem', color: 'var(--primary)' }}>Rp {location.rate ? location.rate.toLocaleString() : '3.000'}</span>
+                <span style={{ fontWeight: 700, fontSize: '1.2rem', color: 'var(--primary)' }}> {location.rate ? location.rate.toLocaleString() : '3.000'}</span>
               </div>
             </div>
 
@@ -262,7 +262,7 @@ const Details = () => {
                 disabled={paymentProcessing}
                 style={{ width: '100%', padding: '14px', borderRadius: '8px', background: 'var(--primary)', color: 'white', border: 'none', fontWeight: 600, fontSize: '1rem', cursor: paymentProcessing ? 'not-allowed' : 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
               >
-                {paymentProcessing ? 'Memproses...' : 'Bayar Sekarang'}
+                {paymentProcessing ? 'Memproses...' : 'Booking Sekarang'}
               </button>
             </div>
           </div>
