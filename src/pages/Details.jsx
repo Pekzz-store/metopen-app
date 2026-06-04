@@ -192,7 +192,7 @@ const Details = () => {
       </div>
 
       <div style={{ marginBottom: '20px' }}>
-        <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '0.9rem' }}>Pilih Kendaraan Anda</label>
+        <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '0.9rem' }}>Pilih Mobil Anda</label>
         {userVehicles.length > 0 ? (
           <select 
             value={selectedVehicle}
@@ -205,7 +205,7 @@ const Details = () => {
           </select>
         ) : (
           <div style={{ padding: '12px', background: '#FEE2E2', color: '#991B1B', borderRadius: '8px', fontSize: '0.85rem' }}>
-            Anda belum mendaftarkan kendaraan. Silakan tambahkan di halaman Profil.
+            Anda belum mendaftarkan mobil. Silakan tambahkan di halaman Profil.
           </div>
         )}
       </div>
@@ -240,7 +240,7 @@ const Details = () => {
                 <span style={{ fontWeight: 500 }}>{location.name}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-                <span style={{ color: 'var(--text-muted)' }}>Kendaraan</span>
+                <span style={{ color: 'var(--text-muted)' }}>Mobil</span>
                 <span style={{ fontWeight: 500 }}>{selectedVehicle}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>

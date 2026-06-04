@@ -30,7 +30,7 @@ const Sidebar = () => {
 
         <NavLink to="/profile/vehicles" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
           <Car size={20} />
-          <span>Kendaraan</span>
+          <span>Mobil</span>
         </NavLink>
         <NavLink to="/profile" end className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
           <User size={20} />

@@ -69,7 +69,7 @@ const Ticket = () => {
           <CheckCircle2 size={48} color="#D1FAE5" style={{ marginBottom: '12px' }} />
           <h2 style={{ margin: 0, fontSize: '1.5rem' }}>E-Ticket Parkir</h2>
           <div style={{ background: 'rgba(255,255,255,0.2)', padding: '4px 12px', borderRadius: '20px', display: 'inline-block', marginTop: '12px', fontSize: '0.85rem', fontWeight: 600 }}>
-            LUNAS
+            SUDAH DI BOOKING
           </div>
         </div>
 
@@ -99,7 +99,7 @@ const Ticket = () => {
             <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
               <Car size={24} color="var(--primary)" style={{ flexShrink: 0 }} />
               <div>
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '4px' }}>Kendaraan</div>
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '4px' }}>Mobil</div>
                 <div style={{ fontWeight: 600, fontSize: '1rem' }}>{ticket.license_plate}</div>
               </div>
             </div>

@@ -121,37 +121,7 @@ const MapComponent = ({ locations, isAdmin = false, panTo = null, routeTarget = 
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
       />
 
-      {/* GIS Element: Traffic Jam Hotspots */}
-      {trafficJamHotspots.map(hotspot => (
-        <Circle 
-          key={`hotspot-${hotspot.id}`}
-          center={hotspot.center}
-          pathOptions={{ fillColor: hotspot.color, stroke: false, fillOpacity: 0.25 }}
-          radius={hotspot.radius}
-        >
-          <Tooltip sticky>
-            <div style={{ fontWeight: 600, color: hotspot.color, marginBottom: '4px' }}>{hotspot.name}</div>
-            <div style={{ fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <span style={{ fontWeight: 600 }}>Jam Rawan:</span> 07:00 - 09:00 & 16:00 - 18:30
-            </div>
-            <div style={{ fontSize: '0.75rem', color: '#64748B', marginTop: '2px' }}>Hindari area ini pada jam sibuk</div>
-          </Tooltip>
-        </Circle>
-      ))}
-
-      {/* GIS Element: Restricted Zones / Towing Zones */}
-      {restrictedZones.map(zone => (
-        <Polygon 
-          key={`zone-${zone.id}`}
-          positions={zone.positions}
-          pathOptions={{ color: zone.color, fillColor: zone.color, fillOpacity: 0.1, weight: 2 }}
-        >
-          <Tooltip sticky>
-            <div style={{ fontWeight: 600, color: zone.color }}>{zone.name}</div>
-            <div style={{ fontSize: '0.8rem' }}>Dilarang parkir di bahu jalan 24 Jam</div>
-          </Tooltip>
-        </Polygon>
-      ))}
+      {/* GIS Elements Removed as requested */}
       
       {locations.map((loc) => (
         <Marker 
